@@ -273,7 +273,16 @@ if (ECHO_INSTALL)
     
     set(TARGETS_TO_INSTALL ${PROJECT_NAME})
 
-    install(TARGETS ${TARGETS_TO_INSTALL} fmt spdlog
+    set(DEPS_TO_INSTALL "")
+
+    if (NOT fmt_FOUND)
+        list(APPEND DEPS_TO_INSTALL fmt)
+    endif()
+    if (NOT spdlog_FOUND)
+        list(APPEND DEPS_TO_INSTALL spdlog)
+    endif()
+
+    install(TARGETS ${TARGETS_TO_INSTALL} ${DEPS_TO_INSTALL}
         EXPORT EchoCoreTarget
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
