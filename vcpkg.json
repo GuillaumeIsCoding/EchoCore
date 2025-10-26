@@ -1,0 +1,26 @@
+{
+    "name": "echo",
+    "version": "0.0.1",
+    "description": "Modern C++ Game Engine",
+    "homepage": "https://github.com/GuillaumeIsCoding/Echo",
+    "documentation": "https://github.com/GuillaumeIsCoding/Echo/wiki",
+    "license": "MIT",
+    "dependencies": [
+        {
+            "name": "fmt",
+            "version>=": "12.0.0"
+        },
+        {
+            "name": "spdlog",
+            "version>=": "1.15.3"
+        }
+    ], 
+    "features": {
+        "docs": {
+            "description": "Build documentation",
+            "dependencies": [
+                "doxygen"
+            ]
+        }
+    }
+}

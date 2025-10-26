@@ -1,0 +1,18 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/EchoCoreTarget.cmake")
+
+check_required_component(EchoCore)
+
+if (NOT EchoCore_FIND_COMPONENT)
+
+    set(EchoCore_FIND_COMPONENT Core)
+
+endif()
+
+if(NOT EchoCore_FIND_QUIETLY)
+
+    message(STATUS "EchoCore found - Version @PROJECT_VERSION@")
+    message(STATUS "    Echo::Core - Main core library")
+
+endif()

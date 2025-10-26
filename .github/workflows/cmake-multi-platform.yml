@@ -1,0 +1,118 @@
+name: CMake on multiple platforms
+
+env:
+  VCPKG_BINARY_SOURCES: "files,${{ github.workspace }}/vcpkg_cache,readwrite"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-2022]
+        build_type: [Release]
+        c_compiler: [gcc, clang, cl]
+        include:
+          - os: windows-2022
+            c_compiler: cl
+            cpp_compiler: cl
+          - os: ubuntu-22.04
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: ubuntu-22.04
+            c_compiler: clang
+            cpp_compiler: clang++
+        exclude:
+          - os: windows-2022
+            c_compiler: gcc
+          - os: windows-2022
+            c_compiler: clang
+          - os: ubuntu-22.04
+            c_compiler: cl
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    # Install Linux dependencies
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libx11-dev \
+          libxrandr-dev \
+          libxinerama-dev \
+          libxcursor-dev \
+          libxi-dev \
+          libgl1-mesa-dev \
+          ninja-build
+
+    # Create binary cache directory
+    - name: Create binary cache directory for Linux
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        mkdir -p ${{ github.workspace }}/vcpkg_cache
+        ls -la "${{ github.workspace }}/vcpkg_cache"
+    
+    - name: Create binary cache directory for Windows
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: | 
+        New-Item -ItemType Directory -Force -Path "${{ github.workspace }}\vcpkg_cache"
+        Test-Path "${{ github.workspace }}\vcpkg_cache"
+
+    # Cache vcpkg binaries - IMPORTANT: Cache before setup
+    - name: Cache vcpkg binary cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-binaries-${{ matrix.os }}-${{ matrix.c_compiler }}-${{ hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json') }}
+        restore-keys: |
+          vcpkg-binaries-${{ matrix.os }}-${{ matrix.c_compiler }}-
+          vcpkg-binaries-${{ matrix.os }}-
+
+    # Cache vcpkg installation
+    - name: Cache vcpkg
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg
+        key: vcpkg-install-${{ matrix.os }}-${{ matrix.c_compiler }}-${{ hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json') }}
+        restore-keys: |
+          vcpkg-install-${{ matrix.os }}-${{ matrix.c_compiler }}-
+          vcpkg-install-${{ matrix.os }}-
+
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgJsonGlob: '**/vcpkg.json'
+
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+        -S ${{ github.workspace }}
+
+    - name: Build
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+
+    - name: Test
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ctest --build-config ${{ matrix.build_type }}

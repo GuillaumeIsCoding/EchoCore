@@ -1,0 +1,121 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/builds/${presetName}",
+            "installDir": "${sourceDir}/installs/${presetName}",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/builds/${presetName}/bin",
+                "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/builds/${presetName}/lib",
+                "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/builds/${presetName}/lib",
+                "VCPKG_DEFAULT_BINARY_CACHE": "${sourceDir}/vcpkg_cache"
+            }
+        },
+        {
+            "name": "msvc",
+            "hidden": true,
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+            "cacheVariables": {
+                "VCPKG_TARGET_TRIPLET": "x64-windows"
+            }
+        },
+        {
+            "name": "debug",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "tests",
+            "hidden": true,
+            "cacheVariables": {
+                "ECHO_BUILD_TESTS": "ON"
+            }
+        },
+        {
+            "name": "install",
+            "hidden": true,
+            "cacheVariables": {
+                "ECHO_INSTALL": "ON"
+            }
+        },
+        {
+            "name": "msvc-debug",
+            "hidden": false,
+            "inherits": [
+                "default",
+                "msvc",
+                "debug"
+            ]
+        },
+        {
+            "name": "msvc-release",
+            "hidden": false,
+            "inherits": [
+                "default",
+                "msvc",
+                "release"
+            ]
+        },
+        {
+            "name": "msvc-debug-with-tests",
+            "hidden": false,
+            "inherits": [
+                "default",
+                "msvc",
+                "debug",
+                "tests"
+            ]
+        },
+        {
+            "name": "msvc-release-with-install",
+            "hidden": false,
+            "inherits": [
+                "default",
+                "msvc",
+                "release",
+                "install"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "msvc-debug",
+            "configurePreset": "msvc-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "msvc-release",
+            "configurePreset": "msvc-release",
+            "configuration": "Release"
+        },
+        {
+            "name": "msvc-debug-with-tests",
+            "configurePreset": "msvc-debug-with-tests",
+            "configuration": "Debug"
+        },
+        {
+            "name": "msvc-release-with-install",
+            "configurePreset": "msvc-release-with-install",
+            "configuration": "Release"
+        }
+    ]
+}
